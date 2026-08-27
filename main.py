@@ -1,22 +1,31 @@
+import pickle
+
 from rich.console import Console
 from rich.panel import Panel
 
 from models.record import Record
 from services.address_book import AddressBook
-
 from models.note import Note
 from services.note_book import NoteBook
 from storage.storage import save_data, load_data
 console = Console()
 DATA_FILE = "storage/data.pkl"
 
-console = Console()
+
 try:
     book, note_book = load_data(DATA_FILE)
+
 except FileNotFoundError:
     book = AddressBook()
     note_book = NoteBook()
 
+except (pickle.UnpicklingError, EOFError):
+    console.print(
+        "[yellow]Warning: Saved data is corrupted. "
+        "Starting with empty data.[/yellow]"
+    )
+    book = AddressBook()
+    note_book = NoteBook()
 
 COMMANDS = {
     "add-contact": "Add a new contact",
@@ -326,7 +335,14 @@ def find_note_by_tag():
 
 def handle_command(command):
     if command == "exit":
-        save_data((book, note_book), DATA_FILE)
+        try:
+            save_data((book, note_book), DATA_FILE)
+            console.print("[green]Data saved successfully![/green]")
+        except OSError as error:
+            console.print(
+                f"[red]Error: Could not save data: {error}[/red]"
+            )
+
         return False
 
     if command == "help":
@@ -389,6 +405,10 @@ def main():
     except KeyboardInterrupt:
         console.print("\n\n[yellow]Goodbye![/yellow]")
 
+    except Exception as error:
+        console.print(
+            f"\n[red]Unexpected error: {error}[/red]"
+        )
 
 if __name__ == "__main__":
     main()
