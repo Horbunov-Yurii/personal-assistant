@@ -6,11 +6,16 @@ from services.address_book import AddressBook
 
 from models.note import Note
 from services.note_book import NoteBook
-
+from storage.storage import save_data, load_data
+console = Console()
+DATA_FILE = "storage/data.pkl"
 
 console = Console()
-book = AddressBook()
-note_book = NoteBook()
+try:
+    book, note_book = load_data(DATA_FILE)
+except FileNotFoundError:
+    book = AddressBook()
+    note_book = NoteBook()
 
 
 COMMANDS = {
@@ -321,6 +326,7 @@ def find_note_by_tag():
 
 def handle_command(command):
     if command == "exit":
+        save_data((book, note_book), DATA_FILE)
         return False
 
     if command == "help":
@@ -372,12 +378,16 @@ def main():
     show_welcome()
     show_menu()
 
-    while True:
-        command = input("\nEnter command: ").strip().lower()
+    try:
+        while True:
+            command = input("\nEnter command: ").strip().lower()
 
-        if not handle_command(command):
-            console.print("\nGoodbye!")
-            break
+            if not handle_command(command):
+                console.print("\nGoodbye!")
+                break
+
+    except KeyboardInterrupt:
+        console.print("\n\n[yellow]Goodbye![/yellow]")
 
 
 if __name__ == "__main__":
