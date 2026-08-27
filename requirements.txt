@@ -1,7 +1,2 @@
-dnspython==2.7.0
 email-validator==2.3.0
-idna==3.19
-markdown-it-py==3.0.0
-mdurl==0.1.2
-Pygments==2.21.0
 rich==15.0.0
