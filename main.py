@@ -4,9 +4,13 @@ from rich.panel import Panel
 from models.record import Record
 from services.address_book import AddressBook
 
+from models.note import Note
+from services.note_book import NoteBook
+
 
 console = Console()
 book = AddressBook()
+note_book = NoteBook()
 
 
 COMMANDS = {
@@ -21,6 +25,7 @@ COMMANDS = {
     "edit-note": "Edit a note",
     "delete-note": "Delete a note",
     "all-notes": "Show all notes",
+    "find-by-tag": "Find notes by tag",
     "help": "Show available commands",
     "exit": "Exit the assistant",
 }
@@ -51,6 +56,7 @@ def show_menu():
     console.print("  edit-note       Edit a note")
     console.print("  delete-note     Delete a note")
     console.print("  all-notes       Show all notes")
+    console.print("  find-by-tag     Find notes by tag")
 
     console.print("\n[bold yellow]OTHER[/bold yellow]")
     console.print("  help            Show available commands")
@@ -62,6 +68,11 @@ def show_help():
 
     for command, description in COMMANDS.items():
         console.print(f"  {command:<16} {description}")
+
+
+# =========================
+# CONTACTS
+# =========================
 
 
 def add_contact():
@@ -98,41 +109,6 @@ def find_contact():
         console.print(record)
     else:
         console.print("[red]Contact not found.[/red]")
-
-
-def delete_contact():
-    name = input("Enter contact name: ").strip()
-
-    record = book.find(name)
-
-    if record is None:
-        console.print("[red]Contact not found.[/red]")
-        return
-
-    field = input(
-        "What do you want to delete (phone/email)? "
-    ).strip().lower()
-
-    if field == "phone":
-        phone = input("Enter phone to delete: ").strip()
-
-        result = book.remove_phone(name, phone)
-
-        if result:
-            console.print("[green]Phone deleted![/green]")
-        else:
-            console.print("[red]Phone not found.[/red]")
-
-    elif field == "email":
-        result = record.remove_email()
-
-        if result:
-            console.print("[green]Email deleted![/green]")
-        else:
-            console.print("[red]Email not found.[/red]")
-
-    else:
-        console.print("[red]Unknown field.[/red]")
 
 
 def edit_contact():
@@ -190,6 +166,41 @@ def edit_contact():
         console.print("[red]Unknown field.[/red]")
 
 
+def delete_contact():
+    name = input("Enter contact name: ").strip()
+
+    record = book.find(name)
+
+    if record is None:
+        console.print("[red]Contact not found.[/red]")
+        return
+
+    field = input(
+        "What do you want to delete (phone/email)? "
+    ).strip().lower()
+
+    if field == "phone":
+        phone = input("Enter phone to delete: ").strip()
+
+        result = book.remove_phone(name, phone)
+
+        if result:
+            console.print("[green]Phone deleted![/green]")
+        else:
+            console.print("[red]Phone not found.[/red]")
+
+    elif field == "email":
+        result = record.remove_email()
+
+        if result:
+            console.print("[green]Email deleted![/green]")
+        else:
+            console.print("[red]Email not found.[/red]")
+
+    else:
+        console.print("[red]Unknown field.[/red]")
+
+
 def show_all_contacts():
     records = book.get_all()
 
@@ -218,6 +229,96 @@ def show_birthdays():
         )
 
 
+# =========================
+# NOTES
+# =========================
+
+
+def add_note():
+    title = input("Enter note title: ").strip()
+    content = input("Enter note content: ").strip()
+    tags_input = input("Enter tags (comma separated): ").strip()
+
+    tags = [
+        tag.strip()
+        for tag in tags_input.split(",")
+        if tag.strip()
+    ]
+
+    note = Note(title, content, tags)
+    note_book.add_note(note)
+
+    console.print("[green]Note added![/green]")
+
+
+def find_note():
+    title = input("Enter note title: ").strip()
+
+    note = note_book.find(title)
+
+    if note:
+        console.print("[green]Found:[/green]")
+        console.print(note)
+    else:
+        console.print("[red]Note not found.[/red]")
+
+
+def edit_note():
+    title = input("Enter note title: ").strip()
+    new_content = input("Enter new content: ").strip()
+
+    result = note_book.edit(title, new_content)
+
+    if result:
+        console.print("[green]Note updated![/green]")
+    else:
+        console.print("[red]Note not found.[/red]")
+
+
+def delete_note():
+    title = input("Enter note title: ").strip()
+
+    result = note_book.delete(title)
+
+    if result:
+        console.print("[green]Note deleted![/green]")
+    else:
+        console.print("[red]Note not found.[/red]")
+
+
+def show_all_notes():
+    notes = note_book.get_all()
+
+    if not notes:
+        console.print("No notes found.")
+        return
+
+    console.print("\n[bold]All notes:[/bold]")
+
+    for note in notes:
+        console.print(note)
+
+
+def find_note_by_tag():
+    tag = input("Enter tag: ").strip()
+
+    notes = note_book.find_by_tag(tag)
+
+    if not notes:
+        console.print("[red]No notes found with this tag.[/red]")
+        return
+
+    console.print("\n[bold]Notes with this tag:[/bold]")
+
+    for note in notes:
+        console.print(note)
+
+
+# =========================
+# COMMAND HANDLER
+# =========================
+
+
 def handle_command(command):
     if command == "exit":
         return False
@@ -243,11 +344,26 @@ def handle_command(command):
     elif command == "birthdays":
         show_birthdays()
 
-    elif command in COMMANDS:
-        console.print(f"You entered: {command}")
+    elif command == "add-note":
+        add_note()
+
+    elif command == "find-note":
+        find_note()
+
+    elif command == "edit-note":
+        edit_note()
+
+    elif command == "delete-note":
+        delete_note()
+
+    elif command == "all-notes":
+        show_all_notes()
+
+    elif command == "find-by-tag":
+        find_note_by_tag()
 
     else:
-        console.print(f"Unknown command: {command}")
+        console.print(f"[red]Unknown command: {command}[/red]")
 
     return True
 
