@@ -15,7 +15,6 @@ class Email:
 
     def __str__(self):
         return self.value
-    
 
 
 if __name__ == "__main__":
@@ -28,4 +27,4 @@ if __name__ == "__main__":
         invalid_email = Email("hello")
         print(invalid_email)
     except ValueError as error:
-        print("Error:", error)    
+        print("Error:", error)

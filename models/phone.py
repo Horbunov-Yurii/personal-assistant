@@ -15,11 +15,11 @@ class Phone:
 
     def __str__(self):
         return self.value
-    
+
 
 if __name__ == "__main__":
     phone = Phone("380501234567")
 
     print(phone)
     print(Phone.is_valid("380501234567"))
-    print(Phone.is_valid("12345"))    
+    print(Phone.is_valid("12345"))

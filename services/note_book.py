@@ -14,7 +14,7 @@ class NoteBook:
                 return note
 
         return None
-    
+
     def edit(self, title, new_content):
         note = self.find(title)
 
@@ -23,7 +23,7 @@ class NoteBook:
 
         note.content = new_content
         return True
-    
+
     def delete(self, title):
         note = self.find(title)
 
@@ -32,7 +32,6 @@ class NoteBook:
 
         self.notes.remove(note)
         return True
-    
 
     def find_by_tag(self, tag):
         result = []

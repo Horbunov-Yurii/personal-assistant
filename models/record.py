@@ -18,7 +18,7 @@ class Record:
         self.email = Email(email)
 
     def add_birthday(self, birthday):
-        self.birthday = Birthday(birthday)    
+        self.birthday = Birthday(birthday)
 
     def edit_phone(self, old_phone, new_phone):
         for index, phone in enumerate(self.phones):
@@ -35,14 +35,14 @@ class Record:
                 return True
 
         return False
-    
+
     def edit_email(self, old_email, new_email):
         if self.email and self.email.value == old_email:
             self.email = Email(new_email)
             return True
 
         return False
-    
+
     def remove_email(self):
         if self.email:
             self.email = None
@@ -61,7 +61,7 @@ class Record:
             f"Email: {email}\n"
             f"Birthday: {birthday}"
         )
-    
+
 
 if __name__ == "__main__":
     record = Record("John")

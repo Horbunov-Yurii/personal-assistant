@@ -1,4 +1,3 @@
-
 import json
 import pickle
 
@@ -73,6 +72,7 @@ COMMANDS = {
 # UI
 # =========================
 
+
 def show_welcome():
     console.print(
         Panel(
@@ -128,6 +128,7 @@ def show_help():
 # CONTACTS
 # =========================
 
+
 def add_contact():
     name = input("Enter name: ").strip()
     phone = input("Enter phone: ").strip()
@@ -144,9 +145,7 @@ def add_contact():
         if book.add_record(record):
             console.print("[green]Contact added![/green]")
         else:
-            console.print(
-                "[red]Error: Contact with this name already exists.[/red]"
-            )
+            console.print("[red]Error: Contact with this name already exists.[/red]")
 
     except ValueError as error:
         console.print(f"[red]Error: {error}[/red]")
@@ -196,9 +195,7 @@ def edit_contact():
         console.print("[red]Contact not found.[/red]")
         return
 
-    field = input(
-        "What do you want to edit (phone/email)? "
-    ).strip().lower()
+    field = input("What do you want to edit (phone/email)? ").strip().lower()
 
     if field == "phone":
         old_phone = input("Enter old phone: ").strip()
@@ -251,9 +248,7 @@ def delete_contact():
         console.print("[red]Contact not found.[/red]")
         return
 
-    field = input(
-        "What do you want to delete (phone/email)? "
-    ).strip().lower()
+    field = input("What do you want to delete (phone/email)? ").strip().lower()
 
     if field == "phone":
         phone = input("Enter phone to delete: ").strip()
@@ -340,16 +335,13 @@ def show_birthdays():
 # NOTES
 # =========================
 
+
 def add_note():
     title = input("Enter note title: ").strip()
     content = input("Enter note content: ").strip()
     tags_input = input("Enter tags (comma separated): ").strip()
 
-    tags = [
-        tag.strip()
-        for tag in tags_input.split(",")
-        if tag.strip()
-    ]
+    tags = [tag.strip() for tag in tags_input.split(",") if tag.strip()]
 
     note = Note(title, content, tags)
     note_book.add_note(note)
@@ -376,9 +368,7 @@ def find_note():
         table.add_row(
             str(note.title),
             str(note.content),
-            ", ".join(str(tag) for tag in note.tags)
-            if note.tags
-            else "-",
+            ", ".join(str(tag) for tag in note.tags) if note.tags else "-",
         )
 
         console.print(table)
@@ -431,9 +421,7 @@ def show_all_notes():
         table.add_row(
             str(note.title),
             str(note.content),
-            ", ".join(str(tag) for tag in note.tags)
-            if note.tags
-            else "-",
+            ", ".join(str(tag) for tag in note.tags) if note.tags else "-",
         )
 
     console.print(table)
@@ -445,9 +433,7 @@ def find_note_by_tag():
     notes = note_book.find_by_tag(tag)
 
     if not notes:
-        console.print(
-            "[red]No notes found with this tag.[/red]"
-        )
+        console.print("[red]No notes found with this tag.[/red]")
         return
 
     table = Table(
@@ -464,9 +450,7 @@ def find_note_by_tag():
         table.add_row(
             str(note.title),
             str(note.content),
-            ", ".join(str(tag) for tag in note.tags)
-            if note.tags
-            else "-",
+            ", ".join(str(tag) for tag in note.tags) if note.tags else "-",
         )
 
     console.print(table)
@@ -476,6 +460,7 @@ def find_note_by_tag():
 # STATISTICS
 # =========================
 
+
 def show_statistics():
     records = book.get_all()
     notes = note_book.get_all()
@@ -483,25 +468,15 @@ def show_statistics():
     total_contacts = len(records)
     total_notes = len(notes)
 
-    contacts_with_phone = sum(
-        1 for record in records if record.phones
-    )
+    contacts_with_phone = sum(1 for record in records if record.phones)
 
-    contacts_with_email = sum(
-        1 for record in records if record.email
-    )
+    contacts_with_email = sum(1 for record in records if record.email)
 
-    contacts_with_birthday = sum(
-        1 for record in records if record.birthday
-    )
+    contacts_with_birthday = sum(1 for record in records if record.birthday)
 
-    notes_with_tags = sum(
-        1 for note in notes if note.tags
-    )
+    notes_with_tags = sum(1 for note in notes if note.tags)
 
-    total_tags = sum(
-        len(note.tags) for note in notes
-    )
+    total_tags = sum(len(note.tags) for note in notes)
 
     table = Table(
         title="Application Statistics",
@@ -554,6 +529,7 @@ def show_statistics():
 # JSON IMPORT / EXPORT
 # =========================
 
+
 def export_json():
     try:
         export_to_json(
@@ -563,31 +539,23 @@ def export_json():
         )
 
         console.print(
-            f"[green]Data exported successfully to "
-            f"{EXPORT_FILE}![/green]"
+            f"[green]Data exported successfully to " f"{EXPORT_FILE}![/green]"
         )
 
     except OSError as error:
-        console.print(
-            f"[red]Error: Could not export data: {error}[/red]"
-        )
+        console.print(f"[red]Error: Could not export data: {error}[/red]")
 
 
 def import_json():
     global book, note_book
 
-    filename = input(
-        "Enter JSON file path "
-        "(default: storage/backup.json): "
-    ).strip()
+    filename = input("Enter JSON file path " "(default: storage/backup.json): ").strip()
 
     if not filename:
         filename = EXPORT_FILE
 
     try:
-        imported_book, imported_note_book = import_from_json(
-            filename
-        )
+        imported_book, imported_note_book = import_from_json(filename)
 
         book = imported_book
         note_book = imported_note_book
@@ -597,34 +565,25 @@ def import_json():
             DATA_FILE,
         )
 
-        console.print(
-            "[green]Data imported successfully![/green]"
-        )
+        console.print("[green]Data imported successfully![/green]")
 
     except FileNotFoundError:
-        console.print(
-            f"[red]Error: File not found: {filename}[/red]"
-        )
+        console.print(f"[red]Error: File not found: {filename}[/red]")
 
     except json.JSONDecodeError:
-        console.print(
-            "[red]Error: Invalid JSON file.[/red]"
-        )
+        console.print("[red]Error: Invalid JSON file.[/red]")
 
     except (KeyError, TypeError, ValueError) as error:
-        console.print(
-            f"[red]Error: Invalid data format: {error}[/red]"
-        )
+        console.print(f"[red]Error: Invalid data format: {error}[/red]")
 
     except OSError as error:
-        console.print(
-            f"[red]Error: Could not read file: {error}[/red]"
-        )
+        console.print(f"[red]Error: Could not read file: {error}[/red]")
 
 
 # =========================
 # COMMAND HANDLER
 # =========================
+
 
 def handle_command(command):
     if command == "exit":
@@ -634,14 +593,10 @@ def handle_command(command):
                 DATA_FILE,
             )
 
-            console.print(
-                "[green]Data saved successfully![/green]"
-            )
+            console.print("[green]Data saved successfully![/green]")
 
         except OSError as error:
-            console.print(
-                f"[red]Error: Could not save data: {error}[/red]"
-            )
+            console.print(f"[red]Error: Could not save data: {error}[/red]")
 
         return False
 
@@ -694,9 +649,7 @@ def handle_command(command):
         import_json()
 
     else:
-        console.print(
-            f"[red]Unknown command: {command}[/red]"
-        )
+        console.print(f"[red]Unknown command: {command}[/red]")
 
     return True
 
@@ -705,29 +658,24 @@ def handle_command(command):
 # MAIN
 # =========================
 
+
 def main():
     show_welcome()
     show_menu()
 
     try:
         while True:
-            command = input(
-                "\nEnter command: "
-            ).strip().lower()
+            command = input("\nEnter command: ").strip().lower()
 
             if not handle_command(command):
                 console.print("\nGoodbye!")
                 break
 
     except KeyboardInterrupt:
-        console.print(
-            "\n\n[yellow]Goodbye![/yellow]"
-        )
+        console.print("\n\n[yellow]Goodbye![/yellow]")
 
     except Exception as error:
-        console.print(
-            f"\n[red]Unexpected error: {error}[/red]"
-        )
+        console.print(f"\n[red]Unexpected error: {error}[/red]")
 
 
 if __name__ == "__main__":

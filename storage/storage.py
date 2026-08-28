@@ -1,4 +1,3 @@
-
 import json
 import os
 import pickle
@@ -44,15 +43,8 @@ def export_to_json(book, note_book, filename):
         contacts.append(
             {
                 "name": str(record.name),
-                "phones": [
-                    str(phone)
-                    for phone in record.phones
-                ],
-                "email": (
-                    str(record.email)
-                    if record.email
-                    else None
-                ),
+                "phones": [str(phone) for phone in record.phones],
+                "email": (str(record.email) if record.email else None),
                 "birthday": birthday,
             }
         )
@@ -64,10 +56,7 @@ def export_to_json(book, note_book, filename):
             {
                 "title": str(note.title),
                 "content": str(note.content),
-                "tags": [
-                    str(tag)
-                    for tag in note.tags
-                ],
+                "tags": [str(tag) for tag in note.tags],
             }
         )
 
@@ -98,9 +87,7 @@ def import_from_json(filename):
         data = json.load(file)
 
     if not isinstance(data, dict):
-        raise ValueError(
-            "JSON root must be an object."
-        )
+        raise ValueError("JSON root must be an object.")
 
     if "contacts" not in data:
         raise KeyError("Missing 'contacts' field.")
@@ -109,28 +96,20 @@ def import_from_json(filename):
         raise KeyError("Missing 'notes' field.")
 
     if not isinstance(data["contacts"], list):
-        raise TypeError(
-            "'contacts' must be a list."
-        )
+        raise TypeError("'contacts' must be a list.")
 
     if not isinstance(data["notes"], list):
-        raise TypeError(
-            "'notes' must be a list."
-        )
+        raise TypeError("'notes' must be a list.")
 
     book = AddressBook()
     note_book = NoteBook()
 
     for contact in data["contacts"]:
         if not isinstance(contact, dict):
-            raise ValueError(
-                "Invalid contact format."
-            )
+            raise ValueError("Invalid contact format.")
 
         if "name" not in contact:
-            raise KeyError(
-                "Contact is missing 'name'."
-            )
+            raise KeyError("Contact is missing 'name'.")
 
         record = Record(contact["name"])
 
@@ -151,23 +130,17 @@ def import_from_json(filename):
 
     for note_data in data["notes"]:
         if not isinstance(note_data, dict):
-            raise ValueError(
-                "Invalid note format."
-            )
+            raise ValueError("Invalid note format.")
 
         if "title" not in note_data:
-            raise KeyError(
-                "Note is missing 'title'."
-            )
+            raise KeyError("Note is missing 'title'.")
 
         title = note_data["title"]
         content = note_data.get("content", "")
         tags = note_data.get("tags", [])
 
         if not isinstance(tags, list):
-            raise TypeError(
-                "Note 'tags' must be a list."
-            )
+            raise TypeError("Note 'tags' must be a list.")
 
         note = Note(
             title,

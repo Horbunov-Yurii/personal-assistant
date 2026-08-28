@@ -101,9 +101,7 @@ class AddressBook:
             birthday_this_year = birthday.replace(year=today.year)
 
             if birthday_this_year < today:
-                birthday_this_year = birthday_this_year.replace(
-                    year=today.year + 1
-                )
+                birthday_this_year = birthday_this_year.replace(year=today.year + 1)
 
             days_left = (birthday_this_year - today).days
 
