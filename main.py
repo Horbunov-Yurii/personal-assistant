@@ -1,16 +1,32 @@
+
+import json
 import pickle
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 
 from models.record import Record
 from services.address_book import AddressBook
 from models.note import Note
 from services.note_book import NoteBook
-from storage.storage import save_data, load_data
-console = Console()
-DATA_FILE = "storage/data.pkl"
+from storage.storage import (
+    export_to_json,
+    import_from_json,
+    load_data,
+    save_data,
+)
 
+
+console = Console()
+
+DATA_FILE = "storage/data.pkl"
+EXPORT_FILE = "storage/backup.json"
+
+
+# =========================
+# LOAD DATA
+# =========================
 
 try:
     book, note_book = load_data(DATA_FILE)
@@ -27,6 +43,11 @@ except (pickle.UnpicklingError, EOFError):
     book = AddressBook()
     note_book = NoteBook()
 
+
+# =========================
+# COMMANDS
+# =========================
+
 COMMANDS = {
     "add-contact": "Add a new contact",
     "find-contact": "Find a contact",
@@ -40,15 +61,22 @@ COMMANDS = {
     "delete-note": "Delete a note",
     "all-notes": "Show all notes",
     "find-by-tag": "Find notes by tag",
+    "export-json": "Export contacts and notes to JSON",
+    "import-json": "Import contacts and notes from JSON",
+    "statistics": "Show application statistics",
     "help": "Show available commands",
     "exit": "Exit the assistant",
 }
 
 
+# =========================
+# UI
+# =========================
+
 def show_welcome():
     console.print(
         Panel(
-            "PERSONAL ASSISTANT",
+            "[bold]PERSONAL ASSISTANT[/bold]",
             title="Welcome",
             border_style="blue",
         )
@@ -73,21 +101,32 @@ def show_menu():
     console.print("  find-by-tag     Find notes by tag")
 
     console.print("\n[bold yellow]OTHER[/bold yellow]")
+    console.print("  export-json     Export contacts and notes to JSON")
+    console.print("  import-json     Import contacts and notes from JSON")
+    console.print("  statistics      Show application statistics")
     console.print("  help            Show available commands")
     console.print("  exit            Exit the assistant")
 
 
 def show_help():
-    console.print("\n[bold]Available commands:[/bold]")
+    table = Table(
+        title="Available Commands",
+        show_header=True,
+        header_style="bold cyan",
+    )
+
+    table.add_column("Command", style="bold")
+    table.add_column("Description")
 
     for command, description in COMMANDS.items():
-        console.print(f"  {command:<16} {description}")
+        table.add_row(command, description)
+
+    console.print(table)
 
 
 # =========================
 # CONTACTS
 # =========================
-
 
 def add_contact():
     name = input("Enter name: ").strip()
@@ -119,8 +158,31 @@ def find_contact():
     record = book.search(query)
 
     if record:
-        console.print("[green]Found:[/green]")
-        console.print(record)
+        table = Table(
+            title="Contact Found",
+            show_header=True,
+            header_style="bold cyan",
+        )
+
+        table.add_column("Name")
+        table.add_column("Phone")
+        table.add_column("Email")
+        table.add_column("Birthday")
+
+        birthday = record.birthday
+
+        if birthday and hasattr(birthday, "strftime"):
+            birthday = birthday.strftime("%d.%m.%Y")
+
+        table.add_row(
+            str(record.name),
+            ", ".join(str(phone) for phone in record.phones),
+            str(record.email) if record.email else "-",
+            str(birthday) if birthday else "-",
+        )
+
+        console.print(table)
+
     else:
         console.print("[red]Contact not found.[/red]")
 
@@ -219,34 +281,64 @@ def show_all_contacts():
     records = book.get_all()
 
     if not records:
-        console.print("No contacts found.")
+        console.print("[yellow]No contacts found.[/yellow]")
         return
 
-    console.print("\n[bold]All contacts:[/bold]")
+    table = Table(
+        title="All Contacts",
+        show_header=True,
+        header_style="bold cyan",
+    )
+
+    table.add_column("Name")
+    table.add_column("Phone")
+    table.add_column("Email")
+    table.add_column("Birthday")
 
     for record in records:
-        console.print(record)
+        birthday = record.birthday
+
+        if birthday and hasattr(birthday, "strftime"):
+            birthday = birthday.strftime("%d.%m.%Y")
+
+        table.add_row(
+            str(record.name),
+            ", ".join(str(phone) for phone in record.phones),
+            str(record.email) if record.email else "-",
+            str(birthday) if birthday else "-",
+        )
+
+    console.print(table)
 
 
 def show_birthdays():
     upcoming = book.get_upcoming_birthdays()
 
     if not upcoming:
-        console.print("No upcoming birthdays.")
+        console.print("[yellow]No upcoming birthdays.[/yellow]")
         return
 
-    console.print("\n[bold]Upcoming birthdays:[/bold]")
+    table = Table(
+        title="Upcoming Birthdays",
+        show_header=True,
+        header_style="bold cyan",
+    )
+
+    table.add_column("Name")
+    table.add_column("Birthday")
 
     for record, birthday in upcoming:
-        console.print(
-            f"{record.name}: {birthday.strftime('%d.%m.%Y')}"
+        table.add_row(
+            str(record.name),
+            birthday.strftime("%d.%m.%Y"),
         )
+
+    console.print(table)
 
 
 # =========================
 # NOTES
 # =========================
-
 
 def add_note():
     title = input("Enter note title: ").strip()
@@ -271,8 +363,26 @@ def find_note():
     note = note_book.find(title)
 
     if note:
-        console.print("[green]Found:[/green]")
-        console.print(note)
+        table = Table(
+            title="Note Found",
+            show_header=True,
+            header_style="bold green",
+        )
+
+        table.add_column("Title")
+        table.add_column("Content")
+        table.add_column("Tags")
+
+        table.add_row(
+            str(note.title),
+            str(note.content),
+            ", ".join(str(tag) for tag in note.tags)
+            if note.tags
+            else "-",
+        )
+
+        console.print(table)
+
     else:
         console.print("[red]Note not found.[/red]")
 
@@ -304,13 +414,29 @@ def show_all_notes():
     notes = note_book.get_all()
 
     if not notes:
-        console.print("No notes found.")
+        console.print("[yellow]No notes found.[/yellow]")
         return
 
-    console.print("\n[bold]All notes:[/bold]")
+    table = Table(
+        title="All Notes",
+        show_header=True,
+        header_style="bold green",
+    )
+
+    table.add_column("Title")
+    table.add_column("Content")
+    table.add_column("Tags")
 
     for note in notes:
-        console.print(note)
+        table.add_row(
+            str(note.title),
+            str(note.content),
+            ", ".join(str(tag) for tag in note.tags)
+            if note.tags
+            else "-",
+        )
+
+    console.print(table)
 
 
 def find_note_by_tag():
@@ -319,25 +445,199 @@ def find_note_by_tag():
     notes = note_book.find_by_tag(tag)
 
     if not notes:
-        console.print("[red]No notes found with this tag.[/red]")
+        console.print(
+            "[red]No notes found with this tag.[/red]"
+        )
         return
 
-    console.print("\n[bold]Notes with this tag:[/bold]")
+    table = Table(
+        title=f"Notes with tag: {tag}",
+        show_header=True,
+        header_style="bold green",
+    )
+
+    table.add_column("Title")
+    table.add_column("Content")
+    table.add_column("Tags")
 
     for note in notes:
-        console.print(note)
+        table.add_row(
+            str(note.title),
+            str(note.content),
+            ", ".join(str(tag) for tag in note.tags)
+            if note.tags
+            else "-",
+        )
+
+    console.print(table)
+
+
+# =========================
+# STATISTICS
+# =========================
+
+def show_statistics():
+    records = book.get_all()
+    notes = note_book.get_all()
+
+    total_contacts = len(records)
+    total_notes = len(notes)
+
+    contacts_with_phone = sum(
+        1 for record in records if record.phones
+    )
+
+    contacts_with_email = sum(
+        1 for record in records if record.email
+    )
+
+    contacts_with_birthday = sum(
+        1 for record in records if record.birthday
+    )
+
+    notes_with_tags = sum(
+        1 for note in notes if note.tags
+    )
+
+    total_tags = sum(
+        len(note.tags) for note in notes
+    )
+
+    table = Table(
+        title="Application Statistics",
+        show_header=True,
+        header_style="bold cyan",
+    )
+
+    table.add_column("Metric")
+    table.add_column("Value", justify="right")
+
+    table.add_row(
+        "Contacts",
+        str(total_contacts),
+    )
+
+    table.add_row(
+        "Notes",
+        str(total_notes),
+    )
+
+    table.add_row(
+        "Contacts with phone",
+        str(contacts_with_phone),
+    )
+
+    table.add_row(
+        "Contacts with email",
+        str(contacts_with_email),
+    )
+
+    table.add_row(
+        "Contacts with birthday",
+        str(contacts_with_birthday),
+    )
+
+    table.add_row(
+        "Notes with tags",
+        str(notes_with_tags),
+    )
+
+    table.add_row(
+        "Total tags",
+        str(total_tags),
+    )
+
+    console.print(table)
+
+
+# =========================
+# JSON IMPORT / EXPORT
+# =========================
+
+def export_json():
+    try:
+        export_to_json(
+            book,
+            note_book,
+            EXPORT_FILE,
+        )
+
+        console.print(
+            f"[green]Data exported successfully to "
+            f"{EXPORT_FILE}![/green]"
+        )
+
+    except OSError as error:
+        console.print(
+            f"[red]Error: Could not export data: {error}[/red]"
+        )
+
+
+def import_json():
+    global book, note_book
+
+    filename = input(
+        "Enter JSON file path "
+        "(default: storage/backup.json): "
+    ).strip()
+
+    if not filename:
+        filename = EXPORT_FILE
+
+    try:
+        imported_book, imported_note_book = import_from_json(
+            filename
+        )
+
+        book = imported_book
+        note_book = imported_note_book
+
+        save_data(
+            (book, note_book),
+            DATA_FILE,
+        )
+
+        console.print(
+            "[green]Data imported successfully![/green]"
+        )
+
+    except FileNotFoundError:
+        console.print(
+            f"[red]Error: File not found: {filename}[/red]"
+        )
+
+    except json.JSONDecodeError:
+        console.print(
+            "[red]Error: Invalid JSON file.[/red]"
+        )
+
+    except (KeyError, TypeError, ValueError) as error:
+        console.print(
+            f"[red]Error: Invalid data format: {error}[/red]"
+        )
+
+    except OSError as error:
+        console.print(
+            f"[red]Error: Could not read file: {error}[/red]"
+        )
 
 
 # =========================
 # COMMAND HANDLER
 # =========================
 
-
 def handle_command(command):
     if command == "exit":
         try:
-            save_data((book, note_book), DATA_FILE)
-            console.print("[green]Data saved successfully![/green]")
+            save_data(
+                (book, note_book),
+                DATA_FILE,
+            )
+
+            console.print(
+                "[green]Data saved successfully![/green]"
+            )
+
         except OSError as error:
             console.print(
                 f"[red]Error: Could not save data: {error}[/red]"
@@ -384,11 +684,26 @@ def handle_command(command):
     elif command == "find-by-tag":
         find_note_by_tag()
 
+    elif command == "statistics":
+        show_statistics()
+
+    elif command == "export-json":
+        export_json()
+
+    elif command == "import-json":
+        import_json()
+
     else:
-        console.print(f"[red]Unknown command: {command}[/red]")
+        console.print(
+            f"[red]Unknown command: {command}[/red]"
+        )
 
     return True
 
+
+# =========================
+# MAIN
+# =========================
 
 def main():
     show_welcome()
@@ -396,19 +711,24 @@ def main():
 
     try:
         while True:
-            command = input("\nEnter command: ").strip().lower()
+            command = input(
+                "\nEnter command: "
+            ).strip().lower()
 
             if not handle_command(command):
                 console.print("\nGoodbye!")
                 break
 
     except KeyboardInterrupt:
-        console.print("\n\n[yellow]Goodbye![/yellow]")
+        console.print(
+            "\n\n[yellow]Goodbye![/yellow]"
+        )
 
     except Exception as error:
         console.print(
             f"\n[red]Unexpected error: {error}[/red]"
         )
+
 
 if __name__ == "__main__":
     main()

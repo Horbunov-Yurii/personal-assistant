@@ -1,0 +1,22 @@
+{
+    "contacts": [
+        {
+            "name": "John",
+            "phones": [
+                "0501234567"
+            ],
+            "email": "john@gmail.com",
+            "birthday": "15.09.1990"
+        }
+    ],
+    "notes": [
+        {
+            "title": "Shopping",
+            "content": "Buy milk",
+            "tags": [
+                "shopping",
+                "home"
+            ]
+        }
+    ]
+}
